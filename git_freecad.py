@@ -17,6 +17,10 @@ def help():
 	print("Usage: git-freecad <command> [<args>]")
 	sys.exit(1)
 
+if not os.path.exists(".git"):
+	print("Not a git repository")
+	sys.exit(1)
+
 #only_directories = [f for f in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, f))]
 def get_fcsd_files():
 	res = []
@@ -40,8 +44,8 @@ def remove_fcsd_extension(file: str) -> str:
 
 def unzip(file: str) -> None:
 	fn = remove_fcsd_extension(file)
-	if "." in fn:
-		raise Exception(f"Invalid filename {file}")
+	# if "." in fn:
+	# 	raise Exception(f"Invalid filename {file}")
 	print(f"Unzipping {file} to {fn}")
 	shutil.rmtree(f"{dir}/{fn}", ignore_errors=True)
 	os.makedirs(f"{dir}/{fn}", exist_ok=True)
@@ -54,8 +58,14 @@ def unzip(file: str) -> None:
 
 def exec(command: List[str], dir: Optional[str] = ".") -> None:
 	print(f"Executing {command}")
-	res = subprocess.check_output(command, cwd=dir).decode('utf-8')
-	return res
+	output = subprocess.check_output(command, cwd=dir)
+	print(f"output={output}")
+	try:
+		res = output.decode('utf-8')
+		return res
+	except Exception as e:
+		pass
+	return output
 
 def restore() -> None:
 	for fn in get_fcsd_directories():
