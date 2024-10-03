@@ -2,6 +2,7 @@
 
 import sys
 import os
+import os.path
 import subprocess
 import shutil
 
@@ -19,9 +20,15 @@ def help():
 #only_directories = [f for f in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, f))]
 def get_fcsd_files():
 	res = []
-	for file in os.listdir():
-		print(file.lower())
+	for file in os.listdir("."):
 		if file.lower().endswith(".fcstd"):
+			res.append(file)
+	return res
+
+def get_fcsd_directories():
+	res = []
+	for file in os.listdir(dir):
+		if os.path.isdir(f"{dir}/{file}"):
 			res.append(file)
 	return res
 
@@ -38,12 +45,17 @@ def unzip(file: str) -> None:
 	print(f"Unzipping {file} to {fn}")
 	shutil.rmtree(f"{dir}/{fn}", ignore_errors=True)
 	os.makedirs(f"{dir}/{fn}", exist_ok=True)
-	files_list = subprocess.check_output(["unzip", "-Z1", file]).decode('utf-8')
+	files_list = exec(["unzip", "-Z1", file])
 	print("Saving files list")
 	with open(f"{dir}/{fn}/files.txt", "w") as f:
 		f.write(files_list)
 	print("Unzipping")
-	print(subprocess.check_output(["unzip", file, "-d", f"{dir}/{fn}"]).decode('utf-8'))
+	exec(["unzip", file, "-d", f"{dir}/{fn}"])
+
+def exec(command: List[str], dir: Optional[str] = ".") -> None:
+	print(f"Executing {command}")
+	res = subprocess.check_output(command, cwd=dir).decode('utf-8')
+	return res
 
 if args[0] == "unzip":
 	for file in get_fcsd_files():
@@ -52,12 +64,17 @@ elif args[0] == "stage":
 	for file in get_fcsd_files():
 		unzip(file)
 	print("Staging")
-	print(subprocess.check_output(["git", "add", dir]).decode('utf-8'))
+	exec(["git", "add", dir]).decode('utf-8')
 elif args[0] == "restore":
-	for file in get_fcsd_files():
-		with open(f"{dir}/{file}/files.txt") as f:
-			files = f.read().decode('utf-8')
-		print(subprocess.check_output(["zip", "-r", f"../../{file}.FCStd", files], cwd=f"{dir}/{file}").decode('utf-8'))
+	for fn in get_fcsd_directories():
+		print(f"Restoring {fn}")
+		with open(f"{dir}/{fn}/files.txt") as f:
+			files = f.read().split("\n")
+		target = f"{fn}.FCStd"
+		if os.path.exists(target):
+			if input(f"{target} already exists, overwrite? [y/n]") != "y":
+				sys.exit(0)
+		exec(["zip", "-r", f"../../{target}", *files], dir=f"{dir}/{fn}")
 	pass
 else:
 	help()
