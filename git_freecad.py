@@ -57,15 +57,7 @@ def exec(command: List[str], dir: Optional[str] = ".") -> None:
 	res = subprocess.check_output(command, cwd=dir).decode('utf-8')
 	return res
 
-if args[0] == "unzip":
-	for file in get_fcsd_files():
-		unzip(file)
-elif args[0] == "stage":
-	for file in get_fcsd_files():
-		unzip(file)
-	print("Staging")
-	exec(["git", "add", dir]).decode('utf-8')
-elif args[0] == "restore":
+def restore() -> None:
 	for fn in get_fcsd_directories():
 		print(f"Restoring {fn}")
 		with open(f"{dir}/{fn}/files.txt") as f:
@@ -75,6 +67,21 @@ elif args[0] == "restore":
 			if input(f"{target} already exists, overwrite? [y/n]") != "y":
 				sys.exit(0)
 		exec(["zip", "-r", f"../../{target}", *files], dir=f"{dir}/{fn}")
-	pass
+
+if args[0] == "unzip":
+	for file in get_fcsd_files():
+		unzip(file)
+elif args[0] == "stage":
+	for file in get_fcsd_files():
+		unzip(file)
+	print("Staging")
+	exec(["git", "add", dir])
+elif args[0] == "checkout":
+	if len(args) == 0:
+		help()
+	exec(["git", "checkout", args[1]])
+	restore()
+elif args[0] == "restore":
+	restore()
 else:
 	help()
