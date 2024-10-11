@@ -14,7 +14,14 @@ os.makedirs(dir, exist_ok=True)
 args = sys.argv[1:]
 
 def help():
-	print("Usage: git-freecad <command> [<args>]")
+	print("""Usage: git-freecad <command> [<args>]
+Commands:
+unzip: Unzip/unpackage all FCStd files to fcsd directory
+stage: Unzips all FCStd files and stages them, next it's up to you to commit with git
+checkout: Checkout a branch and restore all FCStd files
+restore: Restore all FCStd files in the current directory from the fcsd directory
+""")
+	print("Commands")
 	sys.exit(1)
 
 if not os.path.exists(".git"):
